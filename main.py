@@ -3,8 +3,10 @@ from typing import List, Tuple, Dict
 import math
 import uuid
 import json
-from classes import Component, Wire
+from classes import Component, Wire, FreeNode
 from calculations import calculate_avg_component_area
+from temp import match_wire_device_points, match_wire_component_points, conversion_to_freenodes
+from class_map import get_class_mapping
 
 def classInitialisation(
     data_device: Dict[str, Tuple[float, float, float, float]],
@@ -18,11 +20,22 @@ def classInitialisation(
 
     device_list = []
     wire_list = []
+    freenode_list = []
 
-    for device in data_device:
-        device_uuid = uuid.uuid4()
+    for i, device in enumerate(data_device):
+        if get_class_mapping(classes[i]) == "junction":
+            x_top_left, y_top_left, x_bottom_right, y_bottom_right = data_device[device]
+            
+            x, y = (x_top_left + x_bottom_right) / 2, (y_top_left + y_bottom_right) / 2
+            freenode_uuid = str(uuid.uuid4())
+            freenode = FreeNode(freenode_uuid, x, y)
+            freenode_list.append(freenode)
+            continue
+
+        # normal devices
+        device_uuid = str(uuid.uuid4())
         x_top_left, y_top_left, x_bottom_right, y_bottom_right = data_device[device]
-        device = Component(device_uuid, x_top_left, y_top_left, x_bottom_right, y_bottom_right)
+        device = Component(device_uuid, x_top_left, y_top_left, x_bottom_right, y_bottom_right, classes[i])
         device_list.append(device)
     
     for wire in data_wire:
@@ -30,7 +43,7 @@ def classInitialisation(
         wire = Wire(angle, x_top_left, y_top_left, x_bottom_right, y_bottom_right)
         wire_list.append(wire)
     
-    return device_list, wire_list
+    return device_list, wire_list, freenode_list
 
 def match_wire_device_points(
     components: List[Component],
@@ -49,6 +62,7 @@ def match_wire_device_points(
         wire_uuid_endpoint_1, wire_uuid_endpoint_2 = w
 
     device_uuids_eg = device_uuids["deviceId"]   #2/4 uuids of device nodes to join
+
     
 if __name__ == "__main__":
     with open('stored_data.json', 'r') as file:
@@ -65,9 +79,20 @@ if __name__ == "__main__":
     # based on the len of data_wire
     wire_uuid = [(str(uuid.uuid4()), str(uuid.uuid4())) for _ in range(len(data_wire))] 
     
-    devices, wires = classInitialisation(data_device, data_wire, device_uuids, image_size, classes, average_area)
-    [print(device) for device in devices]
-    [print(wire) for wire in wires]
+    devices, wires, freenodes = classInitialisation(data_device, data_wire, device_uuids, image_size, classes, average_area)
+
+    # pass 1 - from components to wires only
+    match_wire_device_points(devices, wires, freenodes)
+
+    # pass 2 - from wires
+    match_wire_component_points(wires, devices, freenodes)
+
+    # conversion of junctions, wire to wire => freenodes
+    conversion_to_freenodes(wires, devices, freenodes) 
+
+
+    # [print(device) for device in devices]
+    # [print(wire) for wire in wires]
 
     print(image_size)
     print("Average Area: ", calculate_avg_component_area(devices, image_size))

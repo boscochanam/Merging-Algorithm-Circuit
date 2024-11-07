@@ -6,7 +6,7 @@ import random
 
 from calculations import calculate_avg_component_area
 from main import classInitialisation
-from temp import match_wire_device_points
+from temp import match_wire_component_points, match_wire_device_points
 
 def plot_components_and_wires(components, wires):
     fig, ax = plt.subplots(figsize=(10, 10))
@@ -73,11 +73,16 @@ if __name__ == "__main__":
     wire_uuid = [(str(uuid.uuid4()), str(uuid.uuid4())) for _ in range(len(data_wire))] 
     
     devices, wires = classInitialisation(data_device, data_wire, device_uuids, image_size, classes, average_area)
-    [print(device) for device in devices]
-    [print(wire) for wire in wires]
+    # [print(device) for device in devices]
+    # [print(wire) for wire in wires]
 
     # Perform matching
     match_wire_device_points(devices, wires)
-
+    [print(device) for device in devices]
+    plot_components_and_wires(devices, wires)
+    print()
+    # Join wire endpoints to components
+    match_wire_component_points(devices, wires)
+    [print(device) for device in devices]
     # Visualize
     plot_components_and_wires(devices, wires)

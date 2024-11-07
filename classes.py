@@ -9,9 +9,43 @@ import math
     
 #     return (center_x + x_offset, center_y) if flag else (center_x - x_offset, center_y)
 
+class FreeNode:
+    def __init__(self, freenode_uuid, x, y):
+        self.x = x
+        self.y = y
+        self.uuid = freenode_uuid
+        self.uuid_endpoint_left = str(uuid.uuid4())
+        self.uuid_endpoint_right = str(uuid.uuid4())
+        self.is_attached_left = False
+        self.is_attached_right = False
+        self.is_attached_to_component_left = False
+        self.is_attached_to_component_right = False
+        self.left_wireid = None
+        self.right_wireid = None
+
+    def update_left_wireid(self, wireid):
+        self.left_wireid = wireid
+    
+    def update_right_wireid(self, wireid):
+        self.right_wireid = wireid
+        
+    def get_uuid_endpoint_left(self):
+        return self.uuid_endpoint_left
+    
+    def get_uuid_endpoint_right(self):
+        return self.uuid_endpoint_right
+
+    def get_distance_wire_to_freenode(self, x, y):
+        return math.sqrt((self.x - x) ** 2 + (self.y - y) ** 2)
+    
+    def __str__(self):
+        return f"FreeNode {self.uuid} at ({self.x}, {self.y})"
+
+    
+
 
 class Component:
-    def __init__(self, component_uuid, x_top_left, y_top_left, x_bottom_right, y_bottom_right):
+    def __init__(self, component_uuid, x_top_left, y_top_left, x_bottom_right, y_bottom_right, class_component):
         self.uuid = component_uuid
         self.x_top_left = x_top_left
         self.y_top_left = y_top_left
@@ -21,6 +55,8 @@ class Component:
         self.uuid_endpoint_right = str(uuid.uuid4())
         self.is_attached_left = False
         self.is_attached_right = False
+        self.class_component = class_component # string
+        
         # self.attach1 = calc_attach(self.x_top_left, self.y_top_left, self.x_bottom_right, self.y_bottom_right, True)
         # self.attach2 = calc_attach(self.x_top_left, self.y_top_left, self.x_bottom_right, self.y_bottom_right, False)
     
@@ -37,7 +73,7 @@ class Component:
         return f"Component {self.uuid} at ({self.x_top_left}, {self.y_top_left}) to ({self.x_bottom_right}, {self.y_bottom_right})"
     
     # calculates distance wrt wire endpoint(left/right)
-    def get_distance_to_component(self, x, y):
+    def get_distance_wire_to_component(self, x, y):
         # Calculate the horizontal distance
         if x < self.x_top_left:
             dist_x = self.x_top_left - x
