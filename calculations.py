@@ -1,4 +1,5 @@
 from typing import List, Tuple, Dict, Set
+from classes import Component
 import math
 
 from classes import Component

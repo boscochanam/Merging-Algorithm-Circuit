@@ -5,7 +5,7 @@ import uuid
 import json
 from classes import Component, Wire, FreeNode
 from calculations import calculate_avg_component_area
-from temp import match_wire_device_points, match_wire_component_points, conversion_to_freenodes
+from temp import match_wire_device_points, match_wire_points, conversion_to_freenodes
 from class_map import get_class_mapping
 
 def classInitialisation(
@@ -23,12 +23,14 @@ def classInitialisation(
     freenode_list = []
 
     for i, device in enumerate(data_device):
-        if get_class_mapping(classes[i]) == "junction":
+        print(f"Device: {device} with class: {classes[i]}")
+        if get_class_mapping(int(classes[i])) == "junction":
+            print("Found a free node")
             x_top_left, y_top_left, x_bottom_right, y_bottom_right = data_device[device]
             
-            x, y = (x_top_left + x_bottom_right) / 2, (y_top_left + y_bottom_right) / 2
+            # x, y = (x_top_left + x_bottom_right) / 2, (y_top_left + y_bottom_right) / 2
             freenode_uuid = str(uuid.uuid4())
-            freenode = FreeNode(freenode_uuid, x, y)
+            freenode = FreeNode(freenode_uuid, x_top_left, y_top_left, x_bottom_right, y_bottom_right)
             freenode_list.append(freenode)
             continue
 
@@ -45,27 +47,9 @@ def classInitialisation(
     
     return device_list, wire_list, freenode_list
 
-def match_wire_device_points(
-    components: List[Component],
-    wires: List[Wire],
-): 
-    """ Match the wire endpoints to the device nodes. """
-
-    # Threshold for matching the wire endpoints to the device nodes
-    # matching_threshold = 0.2 * calculate_avg_component_area()
-
-    for w in wires:
-        
-        pass
-    
-    for w in wire_uuid:
-        wire_uuid_endpoint_1, wire_uuid_endpoint_2 = w
-
-    device_uuids_eg = device_uuids["deviceId"]   #2/4 uuids of device nodes to join
-
     
 if __name__ == "__main__":
-    with open('stored_data.json', 'r') as file:
+    with open('stored_data_2.json', 'r') as file:
         data = json.load(file)
     
     # Assuming the JSON structure matches the function parameters
@@ -84,10 +68,10 @@ if __name__ == "__main__":
     # pass 1 - from components to wires only
     match_wire_device_points(devices, wires, freenodes)
 
-    # pass 2 - from wires
-    match_wire_component_points(wires, devices, freenodes)
+    # pass 2 - from wires => getting freenodes
+    match_wire_points(wires, devices, freenodes)
 
-    # conversion of junctions, wire to wire => freenodes
+    # conversion of freenodes => merging wires
     conversion_to_freenodes(wires, devices, freenodes) 
 
 
@@ -96,3 +80,4 @@ if __name__ == "__main__":
 
     print(image_size)
     print("Average Area: ", calculate_avg_component_area(devices, image_size))
+    print("FreeNodes: ", freenodes)
